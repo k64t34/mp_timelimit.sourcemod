@@ -2,7 +2,7 @@
 // Timers https://hlmod.ru/threads/sourcepawn-urok-6-tajmery.37541/
 #define noDEBUG 1
 #define PLUGIN_NAME  "mp_timelimit"
-#define PLUGIN_VERSION "2.0"
+#define PLUGIN_VERSION "2.1"
 int gPLUGIN_NAME[]=PLUGIN_NAME;
 
 #include "k64t"//#include <sourcemod> 
@@ -23,6 +23,7 @@ public void OnPluginStart(){
 #if defined DEBUG	
 DebugPrint("OnPluginStart");
 #endif 
+LogMessage("OnPluginStart");
 }
 //***********************************************
 public void OnMapStart(){
@@ -30,6 +31,7 @@ public void OnMapStart(){
 #if defined DEBUG		
 DebugPrint("OnMapStart");
 #endif
+LogMessage("OnMapStart");
 //https://sm.alliedmods.net/new-api/sourcemod/GetTime
 //int GetTime(int bigStamp[2])
 //Parameters
@@ -77,10 +79,12 @@ if (hConVar_mp_timelimit!=INVALID_HANDLE)
 	#if defined DEBUG
 	Minute=58;			
 	#endif	
+	//Minute=58;			
 	int LeftSecond=60*(58-Minute)+60-Second;	
 	#if defined DEBUG
 	PrintToServer("StartCountDown in %i %2i:%2i %i",LeftSecond,Minute,Second,60*Minute+Second);
 	#endif
+	LogMessage("StartCountDown in %i %2i:%2i %i",LeftSecond,Minute,Second,60*Minute+Second);
 	
 	CreateTimer(float(LeftSecond), StartCountDown,_,TIMER_FLAG_NO_MAPCHANGE);
 	}
@@ -101,6 +105,7 @@ if (GetMapTimeLeft(timeleft))
 	else
 	DebugPrint("timeleft not suppoted");	
 #endif 	
+LogMessage("StartCountDown");
 g_iInterval=61;
 #if defined DEBUG		
 PrintToServer("Set timelimit to %i",1);
@@ -120,12 +125,14 @@ DebugPrint("Timer_Countdown %i",g_iInterval);
 #endif 	
 if (g_iInterval <= 0)
 	{
+	LogMessage("FinishCountDown");
 	SetConVarInt(hConVar_mp_timelimit, 1);//https://sm.alliedmods.net/new-api/convars/SetConVarInt
 	return Plugin_Stop;
 	}
 else 
 	{
-	PrintHintTextToAll("%d ", g_iInterval);		
+	//PrintHintTextToAll("%d ", g_iInterval);		
+	PrintCenterTextAll("%d ", g_iInterval);		
 	return Plugin_Continue;
 	}
 }
@@ -137,6 +144,7 @@ public void OnMapEnd(){
 DebugPrint("OnMapEnd");
 #endif
 g_iInterval=0;
+LogMessage("OnMapEnd");
 }
 
 //***********************************************
