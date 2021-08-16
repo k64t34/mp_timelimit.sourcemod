@@ -1,6 +1,6 @@
 //#C:\pro\SourceMod\MySMcompile.exe "$(FULL_CURRENT_PATH)"
 // Timers https://hlmod.ru/threads/sourcepawn-urok-6-tajmery.37541/
-#define nDEBUG 1
+#define DEBUG 1
 #define PLUGIN_NAME  "mp_timelimit"
 #define PLUGIN_VERSION "1.0"
 int gPLUGIN_NAME[]=PLUGIN_NAME;
@@ -8,6 +8,7 @@ int gPLUGIN_NAME[]=PLUGIN_NAME;
 #include "k64t"//#include <sourcemod> 
 int g_iInterval;
 //Handle handleTimerCountdown=INVALID_HANDLE;
+Handle hConVar_mp_timelimit=INVALID_HANDLE;
 public Plugin myinfo =
 {
     name = PLUGIN_NAME,
@@ -103,6 +104,8 @@ FormatTime
 %y year of the century, from 00 (79) 
 %Y year (1979) 
 */
+hConVar_mp_timelimit=FindConVar("mp_timelimit");
+if (hConVar_mp_timelimit!=INVALID_HANDLE){
 char strMinute[3];
 char strSecond[3];
 FormatTime(strMinute, 3, "%M",GetTime());
@@ -110,15 +113,19 @@ FormatTime(strSecond, 3, "%S",GetTime());
 int Minute = StringToInt(strMinute);
 int Second = StringToInt(strSecond);
 if (Second!=0) Minute++;
-#if defined DEBUG		
+#if defined DEBUG
 Minute=2;
 #else
 Minute=60-Minute;
 #endif
 //handleTimerCountdown=
 CreateTimer(60.0*(Minute-1)-2/*+(60.0-Second)*/, StartCountDown,_,TIMER_FLAG_NO_MAPCHANGE);
-ServerCommand("mp_timelimit %i",Minute);
+//ServerCommand("mp_timelimit %i",Minute);
+SetConVarInt(hConVar_mp_timelimit, Minute);//, bool replicate, bool notify)
+#if defined DEBUG		
 PrintToServer("Set timelimit to %i",Minute);
+#endif
+}
 }
 //***********************************************
 //public void Event_MapStart(Event event, const char[] name, bool dontBroadcast){
