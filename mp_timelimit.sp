@@ -1,8 +1,8 @@
 //#C:\pro\SourceMod\MySMcompile.exe "$(FULL_CURRENT_PATH)"
 // Timers https://hlmod.ru/threads/sourcepawn-urok-6-tajmery.37541/
-#define DEBUG 1
+#define noDEBUG 1
 #define PLUGIN_NAME  "mp_timelimit"
-#define PLUGIN_VERSION "1.0"
+#define PLUGIN_VERSION "2.0"
 int gPLUGIN_NAME[]=PLUGIN_NAME;
 
 #include "k64t"//#include <sourcemod> 
@@ -13,7 +13,7 @@ public Plugin myinfo =
 {
     name = PLUGIN_NAME,
     author = "Kom64t",
-    description = "Set mp_timelimit up to end of hour.",
+    description = "Finishes the game exactly at the end of the hour",
     version = PLUGIN_VERSION,
     url = "https://github.com/k64t34/mp_timelimit.sourcemod"
 };
@@ -23,50 +23,6 @@ public void OnPluginStart(){
 #if defined DEBUG	
 DebugPrint("OnPluginStart");
 #endif 
-}
-//***********************************************
-public Action StartCountDown(Handle timer){
-//***********************************************	
-#if defined DEBUG	
-DebugPrint("StartCountDown");
-#endif 	
-g_iInterval=61;
-//handleTimerCountdown=
-CreateTimer(1.0, Timer_Countdown, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
-//#if defined DEBUG	
-//if (handleTimerCountdown==INVALID_HANDLE)
-//	DebugPrint("StartCountDown. Error create  timer");
-//#endif 	
-}
-//***********************************************
-public Action Timer_Countdown(Handle timer){
-//***********************************************	
-g_iInterval--;
-#if defined DEBUG	
-DebugPrint("Timer_Countdown %i",g_iInterval);
-#endif 	
-//if (g_iInterval <= 0)
-//{
-//	//handleTimerCountdown=INVALID_HANDLE;
-//	return Plugin_Stop;
-//}
-
-if (g_iInterval <= 0)return Plugin_Stop;
-else 
-	{
-	PrintHintTextToAll("%d ", g_iInterval);		
-	return Plugin_Continue;
-	}
-}
-
-//***********************************************
-public void OnMapEnd(){
-//***********************************************	
-#if defined DEBUG		
-DebugPrint("OnMapEnd");
-#endif
-g_iInterval=0;
-//if (handleTimerCountdown!=INVALID_HANDLE)	
 }
 //***********************************************
 public void OnMapStart(){
@@ -105,28 +61,84 @@ FormatTime
 %Y year (1979) 
 */
 hConVar_mp_timelimit=FindConVar("mp_timelimit");
-if (hConVar_mp_timelimit!=INVALID_HANDLE){
-char strMinute[3];
-char strSecond[3];
-FormatTime(strMinute, 3, "%M",GetTime());
-FormatTime(strSecond, 3, "%S",GetTime());
-int Minute = StringToInt(strMinute);
-int Second = StringToInt(strSecond);
-if (Second!=0) Minute++;
+if (hConVar_mp_timelimit!=INVALID_HANDLE)
+	{
+	SetConVarInt(hConVar_mp_timelimit, 0);
+	#if defined DEBUG		
+	PrintToServer("Set timelimit to %i",0);
+	#endif	
+	char strMinute[3];
+	char strSecond[3];
+	FormatTime(strMinute, 3, "%M",GetTime());
+	FormatTime(strSecond, 3, "%S",GetTime());
+	int Minute = StringToInt(strMinute);
+	int Second = StringToInt(strSecond);
+	//if (Second!=0) Minute++;
+	#if defined DEBUG
+	Minute=58;			
+	#endif	
+	int LeftSecond=60*(58-Minute)+60-Second;	
+	#if defined DEBUG
+	PrintToServer("StartCountDown in %i %2i:%2i %i",LeftSecond,Minute,Second,60*Minute+Second);
+	#endif
+	
+	CreateTimer(float(LeftSecond), StartCountDown,_,TIMER_FLAG_NO_MAPCHANGE);
+	}
 #if defined DEBUG
-Minute=2;
-#else
-Minute=60-Minute;
+else PrintToServer("Error. Cvar mp_timelimit not found");
 #endif
-//handleTimerCountdown=
-CreateTimer(60.0*(Minute-1)-2/*+(60.0-Second)*/, StartCountDown,_,TIMER_FLAG_NO_MAPCHANGE);
-//ServerCommand("mp_timelimit %i",Minute);
-SetConVarInt(hConVar_mp_timelimit, Minute);//, bool replicate, bool notify)
+	
+}
+//***********************************************
+public Action StartCountDown(Handle timer){
+//***********************************************	
+#if defined DEBUG	
+DebugPrint("StartCountDown");
+
+int timeleft;
+if (GetMapTimeLeft(timeleft))
+	DebugPrint("timeleft %i",timeleft);
+	else
+	DebugPrint("timeleft not suppoted");	
+#endif 	
+g_iInterval=61;
 #if defined DEBUG		
-PrintToServer("Set timelimit to %i",Minute);
+PrintToServer("Set timelimit to %i",1);
+if (GetMapTimeLeft(timeleft))
+	DebugPrint("timeleft %i",timeleft);
+	else
+	DebugPrint("timeleft not suppoted");
 #endif
+CreateTimer(1.0, Timer_Countdown, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 }
+//***********************************************
+public Action Timer_Countdown(Handle timer){
+//***********************************************	
+g_iInterval--;
+#if defined DEBUG	
+DebugPrint("Timer_Countdown %i",g_iInterval);
+#endif 	
+if (g_iInterval <= 0)
+	{
+	SetConVarInt(hConVar_mp_timelimit, 1);//https://sm.alliedmods.net/new-api/convars/SetConVarInt
+	return Plugin_Stop;
+	}
+else 
+	{
+	PrintHintTextToAll("%d ", g_iInterval);		
+	return Plugin_Continue;
+	}
 }
+
+//***********************************************
+public void OnMapEnd(){
+//***********************************************	
+#if defined DEBUG		
+DebugPrint("OnMapEnd");
+#endif
+g_iInterval=0;
+}
+
 //***********************************************
 //public void Event_MapStart(Event event, const char[] name, bool dontBroadcast){
 //#if defined DEBUG
@@ -155,14 +167,7 @@ int  HealProcess[MAX_PLAYERS+1][MAX_PLAYERS+1];
 #define TM 1
 Handle HealProcessTimer[MAX_PLAYERS+1] = INVALID_HANDLE;
 
-public Plugin myinfo =
-{
-    name = PLUGIN_NAME,
-    author = "k64t@ya.ru",
-    description = "Plugin allows to heal yourself and teammate",
-    version = PLUGIN_VERSION,
-    url = ""
-};
+
 //***********************************************
 void OnPluginStart(){
 //***********************************************
@@ -187,59 +192,17 @@ RegConsoleCmd("healyou", healyou,"");
 cvarMinHealth = CreateConVar( "medicaid_minhealth", "33" );
 
 }
-//***********************************************
-void OnMapStart(){
-//***********************************************
-AutoExecConfig(true, gPLUGIN_NAME);
-}
-//***********************************************
-void EventPlayerDeath(Handle:event,const String:name[],bool:dontBroadcast){}
-//*****************************************************************************
-public  Action:HealMySelf(client, args){
-//*****************************************************************************
-if( !IsPlayerAlive( client ) )
-	{		
-	PrintToChat( client, "[%s] You can't receive medicaid while you are dead!",gPLUGIN_NAME );		
-	return Plugin_Handled;
-	}
-new tmpInt;
-tmpInt=GetConVarInt(cvarUsageMySelf);
-if (MedicUsed[client][MYSELF]>=tmpInt)
-	{
-	PrintToChat( client, "[%s] You can receive medicaid înly %d time(s)", gPLUGIN_NAME,tmpInt);
-	return Plugin_Handled;
-	}	
-tmpInt = GetConVarInt( cvarMinHealth );	
-if( GetClientHealth( client ) >= tmpInt )
-	{
-	PrintToChat( client, "[%s] Your health must be lower than '%d' to use medicaid!",gPLUGIN_NAME,tmpInt );		
-	return Plugin_Handled;	
-	}
-MedicUsed[client][MYSELF]++;
-PrintToChat( client, "[%s] Successfully use medicaid.",gPLUGIN_NAME );
-SetClientHealth( client, GetConVarInt( cvarMaxHealth ) );
-SetClientScreenFade( client, 255, 0, 0, 60, 1 );
-	
-return Plugin_Continue;
-}
-//*****************************************************************************
-public  Action:healyou(client, args){
-//*****************************************************************************
-MedicUsed[client][TM]++;
-return Plugin_Handled;
+
+
+
+
+https://forums.alliedmods.net/showthread.php?t=136244&highlight=event+game_over
+public OnPluginStart()
+{
+    HookUserMessage(GetUserMessageId("VGUIMenu"),hook_VGUIMenu,true);
 }
 
-
-//*****************************************************************************
-public Action:Event_PlayerSpawn( Handle:event, const String:name[], bool:dontBroadcast ){
-//*****************************************************************************
-//new id = GetClientOfUserId( GetEventInt( event, "userid" ) );
-MedicUsed[GetClientOfUserId( GetEventInt( event, "userid" ) )][MYSELF] = 0;
-MedicUsed[GetClientOfUserId( GetEventInt( event, "userid" ) )][TM] = 0;
-}
-
-#endinput
-
-
-
-
+public Action:hook_VGUIMenu(UserMsg:msg_id, Handle:bf, const players[], playersNum, bool:reliable, bool:init) 
+{
+    return Plugin_Handled;
+} 
