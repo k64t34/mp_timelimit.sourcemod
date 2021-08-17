@@ -2,7 +2,7 @@
 // Timers https://hlmod.ru/threads/sourcepawn-urok-6-tajmery.37541/
 #define noDEBUG 1
 #define PLUGIN_NAME  "mp_timelimit"
-#define PLUGIN_VERSION "2.2"
+#define PLUGIN_VERSION "2.4"
 //int gPLUGIN_NAME[]=PLUGIN_NAME;
 
 #include "k64t"//#include <sourcemod> 
@@ -32,49 +32,17 @@ public void OnMapStart(){
 DebugPrint("OnMapStart");
 #endif
 LogMessage("OnMapStart");
-//https://sm.alliedmods.net/new-api/sourcemod/GetTime
-//int GetTime(int bigStamp[2])
-//Parameters
-//int[2] bigStamp
-//Optional array to store the 64bit timestamp in.
-//Return Value
-//32bit timestamp (number of seconds since unix epoch).00:00:00 UTC) 1 ÿםגאנÿ //1970 דמהא 
-/*
-FormatTime
-%a abbreviated weekday name (Sun) 
-%A full weekday name (Sunday) 
-%b abbreviated month name (Dec) 
-%B full month name (December) 
-%c date and time (Dec 2 06:55:15 1979) 
-%d day of the month (02) 
-%H hour of the 24-hour day (06) 
-%I hour of the 12-hour day (06) 
-%j day of the year, from 001 (335) 
-%m month of the year, from 01 (12) 
-%M minutes after the hour (55) 
-%p AM/PM indicator (AM) 
-%S seconds after the minute (15) 
-%U Sunday week of the year, from 00 (48) 
-%w day of the week, from 0 for Sunday (6) 
-%W Monday week of the year, from 00 (47) 
-%x date (Dec 2 1979) 
-%X time (06:55:15) 
-%y year of the century, from 00 (79) 
-%Y year (1979) 
-*/
 hConVar_mp_timelimit=FindConVar("mp_timelimit");
 if (hConVar_mp_timelimit!=INVALID_HANDLE)
 	{
 	SetConVarInt(hConVar_mp_timelimit, 0);
 	#if defined DEBUG		
 	PrintToServer("Set timelimit to %i",0);
-	#endif	
-	char strMinute[3];
-	char strSecond[3];
-	FormatTime(strMinute, 3, "%M",GetTime());
-	FormatTime(strSecond, 3, "%S",GetTime());
-	int Minute = StringToInt(strMinute);
-	int Second = StringToInt(strSecond);
+	#endif		
+	int HMS[3];
+	GetTimeHMS(HMS);
+	int Minute = HMS[1];
+	int Second = HMS[2];
 	//if (Second!=0) Minute++;
 	#if defined DEBUG
 	Minute=58;			
@@ -84,14 +52,12 @@ if (hConVar_mp_timelimit!=INVALID_HANDLE)
 	#if defined DEBUG
 	PrintToServer("StartCountDown in %i %2i:%2i %i",LeftSecond,Minute,Second,60*Minute+Second);
 	#endif
-	LogMessage("StartCountDown in %i %2i:%2i %i",LeftSecond,Minute,Second,60*Minute+Second);
-	
+	LogMessage("StartCountDown in %i %2i:%2i %i",LeftSecond,Minute,Second,60*Minute+Second);	
 	CreateTimer(float(LeftSecond), StartCountDown,_,TIMER_FLAG_NO_MAPCHANGE);
 	}
 #if defined DEBUG
 else PrintToServer("Error. Cvar mp_timelimit not found");
-#endif
-	
+#endif	
 }
 //***********************************************
 public Action StartCountDown(Handle timer){
@@ -105,7 +71,7 @@ if (GetMapTimeLeft(timeleft))
 	DebugPrint("timeleft not suppoted");	
 #endif 	
 LogMessage("StartCountDown");
-PrintToChatAll("Last minute");
+PrintToChatAll("\x04Last minute");
 g_iInterval=61;
 #if defined DEBUG		
 PrintToServer("Set timelimit to %i",1);
@@ -131,7 +97,7 @@ if (g_iInterval <= 0)
 	}
 else 
 	{
-	//PrintHintTextToAll("%d ", g_iInterval);		
+	//PrintHintTextToAll("%d ", g_iInterval);// ?? ????????? ?.?. HintText ?? ???????????? ? ??????? ????? ?????? ??????
 	PrintCenterTextAll("%d ", g_iInterval);		
 	return Plugin_Continue;
 	}
