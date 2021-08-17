@@ -2,8 +2,8 @@
 // Timers https://hlmod.ru/threads/sourcepawn-urok-6-tajmery.37541/
 #define noDEBUG 1
 #define PLUGIN_NAME  "mp_timelimit"
-#define PLUGIN_VERSION "2.1"
-int gPLUGIN_NAME[]=PLUGIN_NAME;
+#define PLUGIN_VERSION "2.2"
+//int gPLUGIN_NAME[]=PLUGIN_NAME;
 
 #include "k64t"//#include <sourcemod> 
 int g_iInterval;
@@ -98,7 +98,6 @@ public Action StartCountDown(Handle timer){
 //***********************************************	
 #if defined DEBUG	
 DebugPrint("StartCountDown");
-
 int timeleft;
 if (GetMapTimeLeft(timeleft))
 	DebugPrint("timeleft %i",timeleft);
@@ -106,6 +105,7 @@ if (GetMapTimeLeft(timeleft))
 	DebugPrint("timeleft not suppoted");	
 #endif 	
 LogMessage("StartCountDown");
+PrintToChatAll("Last minute");
 g_iInterval=61;
 #if defined DEBUG		
 PrintToServer("Set timelimit to %i",1);
