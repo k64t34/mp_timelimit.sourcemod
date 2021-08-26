@@ -1,8 +1,8 @@
 //#C:\pro\SourceMod\MySMcompile.exe "$(FULL_CURRENT_PATH)"
 // Timers https://hlmod.ru/threads/sourcepawn-urok-6-tajmery.37541/
-#define noDEBUG 1
+#define nDEBUG 1
 #define PLUGIN_NAME  "mp_timelimit"
-#define PLUGIN_VERSION "2.4"
+#define PLUGIN_VERSION "2.5"
 //int gPLUGIN_NAME[]=PLUGIN_NAME;
 
 #include "k64t"//#include <sourcemod> 
@@ -17,21 +17,21 @@ public Plugin myinfo =
     version = PLUGIN_VERSION,
     url = "https://github.com/k64t34/mp_timelimit.sourcemod"
 };
+#if defined DEBUG
 //***********************************************
 public void OnPluginStart(){
-//***********************************************	
-#if defined DEBUG	
+//***********************************************
 DebugPrint("OnPluginStart");
-#endif 
 LogMessage("OnPluginStart");
 }
+#endif 
 //***********************************************
 public void OnMapStart(){
 //***********************************************	
 #if defined DEBUG		
 DebugPrint("OnMapStart");
-#endif
 LogMessage("OnMapStart");
+#endif
 hConVar_mp_timelimit=FindConVar("mp_timelimit");
 if (hConVar_mp_timelimit!=INVALID_HANDLE)
 	{
@@ -51,8 +51,8 @@ if (hConVar_mp_timelimit!=INVALID_HANDLE)
 	int LeftSecond=60*(58-Minute)+60-Second;	
 	#if defined DEBUG
 	PrintToServer("StartCountDown in %i %2i:%2i %i",LeftSecond,Minute,Second,60*Minute+Second);
-	#endif
 	LogMessage("StartCountDown in %i %2i:%2i %i",LeftSecond,Minute,Second,60*Minute+Second);	
+	#endif	
 	CreateTimer(float(LeftSecond), StartCountDown,_,TIMER_FLAG_NO_MAPCHANGE);
 	}
 #if defined DEBUG
@@ -72,6 +72,7 @@ if (GetMapTimeLeft(timeleft))
 #endif 	
 LogMessage("StartCountDown");
 PrintToChatAll("\x04Last minute");
+ServerCommand("knifeFinal");
 g_iInterval=61;
 #if defined DEBUG		
 PrintToServer("Set timelimit to %i",1);
@@ -108,9 +109,9 @@ public void OnMapEnd(){
 //***********************************************	
 #if defined DEBUG		
 DebugPrint("OnMapEnd");
+LogMessage("OnMapEnd");
 #endif
 g_iInterval=0;
-LogMessage("OnMapEnd");
 }
 
 //***********************************************
@@ -122,52 +123,7 @@ LogMessage("OnMapEnd");
 //AutoExecConfig(true, gPLUGIN_NAME);
 //}
 
-
 #endinput
-
-#include "k64t"
-// ConVar
-Handle cvarMinHealth = INVALID_HANDLE;
-Handle cvarMaxHealth = INVALID_HANDLE;
-Handle cvarUsageMySelf = INVALID_HANDLE;
-//new gUsageMySelf;
-Handle cvarUsageTM = INVALID_HANDLE;
-//new gUsageTM;
-// Global Var
-int gPLUGIN_NAME[]=PLUGIN_NAME;
-int  MedicUsed[MAX_PLAYERS+1][2];
-int  HealProcess[MAX_PLAYERS+1][MAX_PLAYERS+1];
-#define MYSELF 0
-#define TM 1
-Handle HealProcessTimer[MAX_PLAYERS+1] = INVALID_HANDLE;
-
-
-//***********************************************
-void OnPluginStart(){
-//***********************************************
-#if defined DEBUG
-DebugPrint("OnPluginStart");
-#endif 
-//LoadTranslations("dod_medicaid.phrases");
-
-cvarMinHealth = CreateConVar( "medicaid_MinHealth", "33");
-cvarMaxHealth = CreateConVar( "medicaid_MaxHealth", "50");
-cvarUsageMySelf = CreateConVar( "medicaid_UsageMySelf", "1");
-cvarUsageTM = CreateConVar( "medicaid_UsageTeammate", "2");
-
-
-//HookEvents
-HookEvent("player_death", EventPlayerDeath);
-HookEvent("player_spawn", Event_PlayerSpawn );
-
-RegConsoleCmd("healmyself", HealMySelf,"");
-RegConsoleCmd("healyou", healyou,"");
-
-cvarMinHealth = CreateConVar( "medicaid_minhealth", "33" );
-
-}
-
-
 
 
 https://forums.alliedmods.net/showthread.php?t=136244&highlight=event+game_over
